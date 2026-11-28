@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Colaborador - Ortech</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="has-nav-padding">
+
+    <nav>
+        <a href="/" class="logo">ORTECH<span>.</span> (Painel)</a>
+        <div class="nav-actions">
+            <button class="theme-btn" onclick="toggleTheme()">🌓 Tema</button>
+            <a href="/" class="btn-action" target="_blank">Ver Loja</a>
+            <a href="/logout" class="btn-logout">Sair</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert {% if category == 'error' %}alert-error{% else %}alert-success{% endif %}" style="padding: 12px 20px; border-radius: 8px; margin-bottom: 25px; font-weight: 600; font-size: 14px;">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="card-form">
+            <h3>Adicionar Novo Produto</h3>
+            <form action="/save_product" method="POST" enctype="multipart/form-data">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome do Produto</label>
+                        <input type="text" name="name" required placeholder="Ex: Smartwatch X">
+                    </div>
+                    <div class="form-group">
+                        <label>SKU</label>
+                        <input type="text" name="sku" required placeholder="Ex: ORT-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Preço (R$)</label>
+                        <input type="number" step="0.01" name="price" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Desconto (%)</label>
+                        <input type="number" name="discount" value="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Cores Disponíveis</label>
+                        <input type="text" name="colors" placeholder="Ex: Preto, Prata">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria Principal</label>
+                        <select name="category" id="product-category" class="form-control" onchange="updateSubcategories()" required>
+                            <option value="">Selecione...</option>
+                            <option value="relogio">Relógio</option>
+                            <option value="acessorio">Acessório</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo / Subcategoria</label>
+                        <select name="subcategory" id="product-subcategory" class="form-control" required>
+                            <option value="">Selecione a categoria primeiro...</option>
+                        </select>
+                    </div>
+                    <!-- Campo de Descrição no Cadastro -->
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Descrição do Produto</label>
+                        <textarea name="description" class="form-control" rows="4" placeholder="Escreva os detalhes, características e especificações do produto..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label>Fotos do Produto (Arraste ou clique para adicionar)</label>
+                    <div class="photo-grid-container">
+                        <div class="photo-slot main-slot" id="slot-1">
+                            <span class="slot-number">1</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewSlotImage(this, 1)">
+                            <button type="button" class="remove-photo" onclick="clearSlot(event, 1)">×</button>
+                        </div>
+                        <div class="photo-slot" id="slot-2">
+                            <span class="slot-number">2</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewSlotImage(this, 2)">
+                            <button type="button" class="remove-photo" onclick="clearSlot(event, 2)">×</button>
+                        </div>
+                        <div class="photo-slot" id="slot-3">
+                            <span class="slot-number">3</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewSlotImage(this, 3)">
+                            <button type="button" class="remove-photo" onclick="clearSlot(event, 3)">×</button>
+                        </div>
+                        <div class="photo-slot" id="slot-4">
+                            <span class="slot-number">4</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewSlotImage(this, 4)">
+                            <button type="button" class="remove-photo" onclick="clearSlot(event, 4)">×</button>
+                        </div>
+                        <div class="photo-slot" id="slot-5">
+                            <span class="slot-number">5</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewSlotImage(this, 5)">
+                            <button type="button" class="remove-photo" onclick="clearSlot(event, 5)">×</button>
+                        </div>
+                        <div class="photo-slot" id="slot-6">
+                            <span class="slot-number">6</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewSlotImage(this, 6)">
+                            <button type="button" class="remove-photo" onclick="clearSlot(event, 6)">×</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Cadastrar Produto</button>
+            </form>
+        </div>
+
+        <div class="header-section">
+            <h2>Gerenciar Produtos Cadastrados</h2>
+        </div>
+
+        <div class="grid">
+            {% for product in products %}
+            <div class="card">
+                <img src="{{ product.image_url.split(',')[0] if product.image_url else 'https://images.unsplash.com/photo-1523275335684-37898b6baf30' }}" alt="{{ product.name }}">
+                <div class="card-title">{{ product.name }}</div>
+                <div class="card-sku">SKU: {{ product.sku }}</div>
+                <div class="card-price">R$ {{ "%.2f"|format(product.price) }}</div>
+                <div class="actions-card">
+                    <button type="button" class="btn-card-edit" 
+                        data-id="{{ product.id }}"
+                        data-name="{{ product.name }}"
+                        data-sku="{{ product.sku }}"
+                        data-price="{{ product.price }}"
+                        data-discount="{{ product.discount }}"
+                        data-colors="{{ product.colors }}"
+                        data-category="{{ product.category }}"
+                        data-subcategory="{{ product.subcategory }}"
+                        data-description="{{ product.description if product.description else '' }}"
+                        data-image="{{ product.image_url }}"
+                        onclick="openEditModalFromButton(this)">Editar</button>
+                    <form action="/delete_product/{{ product.id }}" method="POST" style="flex: 1; display: flex;">
+                        <button type="submit" class="btn-card-del" style="width: 100%;" onclick="return confirm('Deseja realmente excluir este produto?')">Excluir</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <p style="opacity: 0.6; grid-column: 1 / -1; text-align: center; padding: 20px;">Nenhum produto cadastrado no painel.</p>
+            {% endfor %}
+        </div>
+
+        <div class="section-box">
+            <h3>Cadastrar Novo Colaborador</h3>
+            <form action="/admin/add_user" method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome de Usuário</label>
+                        <input type="text" name="new_username" required placeholder="Novo usuário">
+                    </div>
+                    <div class="form-group">
+                        <label>Senha Segura</label>
+                        <input type="password" name="new_password" required placeholder="Mínimo 8 caracteres">
+                        <span class="password-hints">Requer maiúscula, minúscula, número e caractere especial.</span>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">Criar Colaborador</button>
+            </form>
+
+            <h3 style="margin-top: 40px; margin-bottom: 20px;">Colaboradores Ativos</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuário</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>
+                                {% if user.username != 'admin' %}
+                                <form action="/admin/delete_user/{{ user.id }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-delete" onclick="return confirm('Remover acesso deste colaborador?')">Remover</button>
+                                </form>
+                                {% else %}
+                                <span style="font-size: 12px; opacity: 0.5;">Principal</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal de Edição -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            <h3 style="margin-bottom: 20px;">Editar Produto</h3>
+            <form action="/save_product" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="product_id" id="edit-product-id">
+                <div id="edit-existing-images-container"></div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome do Produto</label>
+                        <input type="text" name="name" id="edit-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>SKU</label>
+                        <input type="text" name="sku" id="edit-sku" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Preço (R$)</label>
+                        <input type="number" step="0.01" name="price" id="edit-price" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Desconto (%)</label>
+                        <input type="number" name="discount" id="edit-discount">
+                    </div>
+                    <div class="form-group">
+                        <label>Cores Disponíveis</label>
+                        <input type="text" name="colors" id="edit-colors">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria Principal</label>
+                        <select name="category" id="edit-product-category" class="form-control" onchange="updateEditSubcategories()" required>
+                            <option value="">Selecione...</option>
+                            <option value="relogio">Relógio</option>
+                            <option value="acessorio">Acessório</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo / Subcategoria</label>
+                        <select name="subcategory" id="edit-product-subcategory" class="form-control" required>
+                            <option value="">Selecione a categoria primeiro...</option>
+                        </select>
+                    </div>
+                    <!-- Campo de Descrição no Modal de Edição -->
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Descrição do Produto</label>
+                        <textarea name="description" id="edit-description" class="form-control" rows="4" placeholder="Escreva os detalhes, características e especificações do produto..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label>Fotos do Produto (Editar Slots)</label>
+                    <div class="photo-grid-container" id="edit-photo-grid">
+                        <div class="photo-slot main-slot" id="edit-slot-1" data-slot-index="0">
+                            <span class="slot-number">1</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewEditSlotImage(this, 1)">
+                            <button type="button" class="remove-photo" onclick="clearEditSlot(event, 1)">×</button>
+                        </div>
+                        <div class="photo-slot" id="edit-slot-2" data-slot-index="1">
+                            <span class="slot-number">2</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewEditSlotImage(this, 2)">
+                            <button type="button" class="remove-photo" onclick="clearEditSlot(event, 2)">×</button>
+                        </div>
+                        <div class="photo-slot" id="edit-slot-3" data-slot-index="2">
+                            <span class="slot-number">3</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewEditSlotImage(this, 3)">
+                            <button type="button" class="remove-photo" onclick="clearEditSlot(event, 3)">×</button>
+                        </div>
+                        <div class="photo-slot" id="edit-slot-4" data-slot-index="3">
+                            <span class="slot-number">4</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewEditSlotImage(this, 4)">
+                            <button type="button" class="remove-photo" onclick="clearEditSlot(event, 4)">×</button>
+                        </div>
+                        <div class="photo-slot" id="edit-slot-5" data-slot-index="4">
+                            <span class="slot-number">5</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewEditSlotImage(this, 5)">
+                            <button type="button" class="remove-photo" onclick="clearEditSlot(event, 5)">×</button>
+                        </div>
+                        <div class="photo-slot" id="edit-slot-6" data-slot-index="5">
+                            <span class="slot-number">6</span>
+                            <span class="add-badge">+</span>
+                            <input type="file" name="image_file" accept="image/*" onchange="previewEditSlotImage(this, 6)">
+                            <button type="button" class="remove-photo" onclick="clearEditSlot(event, 6)">×</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-submit" style="margin-top: 15px; width: 100%;" onclick="prepareEditFormSubmit()">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

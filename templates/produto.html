@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - Ortech</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+:root {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --card-bg: #f5f5f7;
+    --accent: #ffcc00;
+    --border-color: #d6d6d6;
+    --nav-bg: rgba(255, 255, 255, 0.9);
+    --danger: #d93838;
+    --success: #28a745;
+}
+
+[data-theme="dark"] {
+    --bg-color: #0b0b0c;
+    --text-color: #f5f5f7;
+    --card-bg: #161618;
+    --accent: #ffcc00;
+    --border-color: #2a2a2c;
+    --nav-bg: rgba(11, 11, 12, 0.9);
+    --danger: #ff4d4d;
+    --success: #34c759;
+}
+        /* Estilos do Slider organizados para não gerar avisos no VS Code */
+        .slider-img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: none;
+            transition: opacity 0.4s ease;
+        }
+        .slider-img.active {
+            display: block;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(128, 128, 128, 0.5);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .dot.active {
+            background: var(--accent, #ffc107);
+        }
+        .slider-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.4);
+            color: #ffffff;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 10;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .slider-arrow:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+        .prev-arrow { left: 12px; }
+        .next-arrow { right: 12px; }
+    </style>
+    <!-- Script colocado no HEAD para aplicar o tema salvo instantaneamente ao carregar -->
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+<body class="has-nav-padding">
+
+    <!-- Barra de navegação com categorias e ações -->
+    <nav>
+        <div style="display: flex; align-items: center; gap: 40px;">
+            <a href="/" class="logo">ORTECH<span>.</span></a>
+            <ul class="nav-links">
+                <li><a href="/?categoria=Relogios">Relógios</a></li>
+                <li><a href="/?categoria=Acessorios">Acessórios</a></li>
+                <li><a href="/?categoria=Smartwatches">Smartwatches</a></li>
+                <li><a href="/?categoria=Acessorios+Celular">Acessórios Celular</a></li>
+            </ul>
+        </div>
+        <div class="nav-actions">
+            <button class="theme-btn" onclick="toggleTheme()">🌓 Tema</button>
+            <a href="/admin" class="admin-link">Painel Colaborador</a>
+        </div>
+    </nav>
+
+    <div class="product-container" style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
+        
+        <!-- Título e Cabeçalho em destaque -->
+        <div style="grid-column: 1 / -1; margin-bottom: 30px;">
+            <h1 class="product-title" style="font-size: 38px; font-weight: 800; line-height: 1.2; margin-bottom: 12px;">
+                {{ product.name }}
+            </h1>
+            <p style="font-size: 16px; opacity: 0.8; max-width: 900px; line-height: 1.5;">
+                Desenvolvido com tecnologia de ponta, o {{ product.name }} entrega desempenho superior, design minimalista e materiais de alta resistência para acompanhar o seu ritmo diário com total segurança.
+            </p>
+            <br>
+            <!-- Breadcrumb / Caminho de navegação -->
+            <div style="grid-column: 1 / -1; margin-bottom: 10px; font-size: 14px; opacity: 0.8;">
+                <a href="/" style="color: inherit; text-decoration: none;">Home</a> / 
+                <span style="opacity: 0.6;">SKU: {{ product.sku }}</span>
+            </div>
+        </div>
+
+        <!-- Coluna Esquerda: Slider de Imagens -->
+        <div class="product-image-box" style="position: relative; height: 520px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 15px;">
+            {% if product.image_url %}
+                {% set imagens = product.image_url.split(',') %}
+                
+                <!-- Imagens cadastradas -->
+                {% for img_path in imagens %}
+                    {% set img_clean = img_path.strip() %}
+                    {% if img_clean %}
+                        {% set src_url = img_clean if img_clean.startswith('http') else url_for('static', filename=img_clean.replace('\\', '/').replace('/static/', '').strip('/')) %}
+                        <img class="slider-img {% if loop.first %}active{% endif %}" src="{{ src_url }}" alt="{{ product.name }}">
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Setas laterais e indicadores sem sintaxe Jinja dentro do evento JS inline -->
+                {% if imagens|length > 1 %}
+                    <button class="slider-arrow prev-arrow" onclick="moveSlide(-1)">&#10094;</button>
+                    <button class="slider-arrow next-arrow" onclick="moveSlide(1)">&#10095;</button>
+
+                    <div class="slider-dots" style="position: absolute; bottom: 15px; display: flex; gap: 8px; z-index: 10;">
+                        {% for img_path in imagens %}
+                            {% if img_path.strip() %}
+                                <span class="dot {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}" onclick="goToSlide(this)"></span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div style="opacity: 0.5; text-align: center;">
+                    <p>Sem imagem cadastrada</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Coluna Direita: Detalhes, Preço e Especificações -->
+        <div class="product-details" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; display: flex; flex-direction: column; gap: 20px;">
+            <h3 style="font-size: 20px; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                Detalhes do Produto
+            </h3>
+
+            <div class="product-price-box" style="display: flex; align-items: center; gap: 15px;">
+                <div class="product-price" style="font-size: 30px; font-weight: 900;">
+                    R$ {{ "%.2f"|format(product.price * (1 - product.discount / 100)) }}
+                </div>
+                {% if product.discount > 0 %}
+                <div class="product-discount-badge" style="background: var(--danger); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: bold;">
+                    -{{ product.discount }}% OFF
+                </div>
+                {% endif %}
+            </div>
+
+            
+
+            <div style="font-size: 14px; line-height: 1.6; opacity: 0.9;">
+                <p style="margin-bottom: 10px; font-weight: 600;">Principais diferenciais e especificações aplicadas:</p>
+                <ul class="specs-list" style="list-style-type: disc; padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+                    <li><span>Cores disponíveis:</span> {{ product.colors }}</li>
+                    <li><span>Garantia:</span> 1 Ano Oficial Ortech com suporte dedicado</li>
+                    <li><span>Envio:</span> Rápido e Seguro com rastreio para todo o Brasil</li>
+                    <li><span>Padrão de Qualidade:</span> Rigorosos testes de homologação e desempenho</li>
+                </ul>
+            </div>
+            
+<!-- Descrição Cadastrada do Produto -->
+            {% if product.description %}
+            <div style="font-size: 14px; line-height: 1.6; opacity: 0.9;">
+                <p style="font-weight: 600; margin-bottom: 5px;">Descrição:</p>
+                <p style="white-space: pre-line;">{{ product.description }}</p>
+            </div>
+            {% endif %}
+            <button class="btn-checkout" onclick="alert('Redirecionando para o checkout seguro...')" style="background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; width: 100%; margin-top: 10px;">
+                Comprar Agora
+            </button>
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

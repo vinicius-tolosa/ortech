@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ortech - Inovação em Relógios e Acessórios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Script no HEAD para aplicar o tema salvo instantaneamente -->
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    </script>
+</head>
+<body>
+     <nav>
+        <a href="/" class="logo">ORTECH<span>.</span></a>
+        <ul class="nav-links" style="text-align: center;">
+            <li><a href="/categoria/relogio">Relógios</a></li>
+            <li><a href="/categoria/acessorio">Acessórios</a></li>
+            <li><a href="/categoria/relogio/smartwatch">Smartwatches</a></li>
+            <li><a href="/categoria/acessorio/celular">Acessórios Celular</a></li>
+        </ul>
+        <div class="nav-actions">
+            <button class="theme-btn" onclick="toggleTheme()">🌓 Tema</button>
+            <a href="/login" class="admin-link" target="_blank">Painel Colaborador</a>
+        </div>
+    </nav>
+
+    <!-- Alertas Flash -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Conteúdo -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5><i class="fas fa-network-wired"></i> ORTECH</h5>
+                    <p>Inovação em Relógios e Acessórios</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5>Redes Sociais</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://www.instagram.com/ortech_smartwatch/" class="text-light text-decoration-none">Instagram</a></li>
+                        <li><a href="/seguranca" class="text-light text-decoration-none">Segurança da Informação</a></li>
+                        <li><a href="/desenvolvimento" class="text-light text-decoration-none">Desenvolvimento de Software</a></li>
+                        <li><a href="/suporte" class="text-light text-decoration-none">Suporte Técnico</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5>Contato</h5>
+                    <p>
+                        <i class="fas fa-phone"></i> (11) 3000-0000<br>
+                        <i class="fas fa-envelope"></i> contato@nexusit.com.br<br>
+                        <i class="fas fa-map-marker-alt"></i> Macapá-Ap
+                    </p>
+                </div>
+            </div>
+            <hr class="bg-light">
+            <div class="text-center">
+                <p>&copy; 2026 ORTECH - Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts Globais e Bloco Único -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
